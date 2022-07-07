@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: harris
+spec:
+  containers:
+  - image: nginx:1.14.2
+    name: nginx
+    volumeMounts:
+    - mountPath: /var/www/html
+      name: webapp
+  volumes:
+  - name: myvolume
+    # This AWS EBS volume must already exist.
+    awsElasticBlockStore:
+      volumeID: "vol-0e926928ace50c337"
+      fsType: ext4

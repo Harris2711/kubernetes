@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - image: nginx:1.14.2
+    name: webapp
+    volumeMounts:
+    - mountPath: /var/www/html
+      name: webapp
+  volumes:
+  - name: webapp
+    persistentVolumeClaim:
+        claimName: harris

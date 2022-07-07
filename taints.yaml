@@ -1,0 +1,44 @@
+taints are given to  nodes which connects nodes and pods
+for example :
+kubectl taint nodes node1 key1=value1:NoSchedule
+i.e
+key1=key
+value1=value
+effect:Noschedule
+
+this taint means that no pods can schedule to this node rather it has a matching toleration
+
+to remove the above taint from node
+kubectl taint nodes node1 key1=value1:NoSchedule-
+
+to schedule a pod to node which has taint, create a tolertion in pod yaml to get scheduled 
+tolerations:
+- key: "key1"
+  operator: "Equal"
+  value: "value1"
+  effect: "NoSchedule"
+
+  the key, value and effect should be matched according to the node taints
+  if there is only a key
+  tolerations:
+- key: "key1"
+  operator: "Exists"
+  effect: "NoSchedule"
+
+  for example to attach a toleration to pod
+  apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: "example-key"
+    operator: "Exists"
+    effect: "NoSchedule"
+
