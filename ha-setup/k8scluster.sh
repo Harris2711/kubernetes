@@ -55,7 +55,7 @@ tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
 
 sudo systemctl restart containerd
 
-aws ec2 describe-instances --filters Name=tag:Name,Values=<proxyname> --region ap-south-1   --query 'Reservations[*].Instances[*][PrivateIpAddress]' --output text > ip.txt
+aws ec2 describe-instances --filters Name=tag:haproxy,Values=lb --region ap-south-1   --query 'Reservations[*].Instances[*][PrivateIpAddress]' --output text > ip.txt
 
 haproxyip=$(cat ip.txt)
 
