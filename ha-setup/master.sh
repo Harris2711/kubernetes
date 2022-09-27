@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sleep 2m
+sudo -s
 
 apt-get install unzip -y
 
@@ -12,13 +12,24 @@ sudo ./aws/install
 #swapoff
 swapoff -a
 
-
-#Update sysctl settings for Kubernetes networking
-cat >>/etc/sysctl.d/kubernetes.conf<<EOF
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
 EOF
-sysctl --system
+
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# sysctl params required by setup, params persist across reboots
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+
+# Apply sysctl params without reboot
+sudo sysctl --system
+
 
 #install docker
 sudo apt-get update
@@ -37,7 +48,7 @@ echo \
 $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y 
+sudo apt-get install containerd.io -y 
 
 
 #configure Containerd 
@@ -72,13 +83,24 @@ sudo apt-get update
 sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 
+#install git
+apt-get install git -y
 
-aws secretsmanager get-secret-value --secret-id mastertoken --query SecretString --output text | sed -n -e 4,6p > masterstoken.txt
+#clone privatekey
+git clone https://github.com/Harris2711/privatekey.git
+cd privatekey/
+cat privkey.pem | base64 --decode > key.pem
+chmod 400 key.pem
 
 
-cat masterstoken.txt | sed '1s/://' | sed 's/Value//' | sed 's/"//g' > mastertoken.sh
+ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c 'git clone https://github.com/Harris2711/privatekey.git'"
+
+ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c 'chmod +x /home/ubuntu/privatekey/mastertoken.sh'"
+
+ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c '/home/ubuntu/privatekey/mastertoken.sh'"
 
 
-chmod +x mastertoken.sh
+aws secretsmanager get-secret-value --secret-id secretmaster | grep "SecretString" | sed 's/"SecretString"//' | sed '1s/://' | sed 's/"//g' | sed 's/,//' | sed 's/.$//' | sed 's/.$//' > token.sh
 
-./mastertoken.sh
+chmod +x token.sh
+./token.sh
