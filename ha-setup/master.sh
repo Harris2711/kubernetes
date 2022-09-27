@@ -92,11 +92,6 @@ cd privatekey/
 cat privkey.pem | base64 --decode > key.pem
 chmod 400 key.pem
 
-
-ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c 'git clone https://github.com/Harris2711/privatekey.git'"
-
-ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c 'chmod +x /home/ubuntu/privatekey/mastertoken.sh'"
-
 ssh -o "StrictHostKeyChecking no" -i key.pem ubuntu@172.31.35.187 sudo -- "sh -c '/home/ubuntu/privatekey/mastertoken.sh'"
 
 
